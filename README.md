@@ -9,6 +9,10 @@ Et producer/consumer program som simulere en flaskeautomat, producer setter flas
 3. Du kører programmet med run knappen
 4. Simulering kører i konsolen
 
+## Struktur
+
+<img width="721" height="241" alt="design" src="https://github.com/user-attachments/assets/78eee8c4-0d55-4b9c-92ef-3fe99619baad" />
+
 ## Klasser
 
 ### Main
