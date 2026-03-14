@@ -2,10 +2,11 @@ package core;
 
 import util.AnsiColors;
 
-// Genererer tilfældige øl- og soda/vandflasker og lægger dem på inputbåndet
+// Producerer flasker og lægger dem i bufferen
 public class Producer implements Runnable {
 
     private static final int MAX_SLEEP_MS = 1000;
+
     private final Buffer buffer;
     private int count = 1;
 
@@ -17,20 +18,20 @@ public class Producer implements Runnable {
     public void run() {
         while (true) {
             try {
-                buffer.put(generateBottle());
-                // Simuler tilfældig produktionstid
-                Thread.sleep((long)(Math.random() * MAX_SLEEP_MS));
+                Bottle bottle = generateBottle();
+                System.out.println(AnsiColors.GREEN + "Producer      → bånd:    " + bottle + AnsiColors.RESET);
+                buffer.put(bottle);
+                Thread.sleep((long) (Math.random() * MAX_SLEEP_MS));
             } catch (InterruptedException e) {
-                System.out.println("Thread error: " + e.getMessage());
+                Thread.currentThread().interrupt();
+                return;
             }
         }
     }
 
-    // Generer tilfældig øl- eller vandflaske med løbenummer
-    private String generateBottle() {
-        // 50/50 chance for øl eller vand
+    // Genererer en tilfældig flaske, 50/50 chance for øl eller vand
+    private Bottle generateBottle() {
         String type = Math.random() > 0.5 ? "øl" : "vand";
-        System.out.println(AnsiColors.GREEN + "Producer      → bånd:    " + type + " #" + count + AnsiColors.RESET);
-        return type + count++;
+        return new Bottle(count++, type);
     }
 }

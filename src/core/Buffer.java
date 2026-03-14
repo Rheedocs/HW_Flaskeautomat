@@ -6,49 +6,41 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-// Trådsikker buffer der fungerer som et bånd mellem producer og consumer.
-// Implementeret som en ressource-monitor med ReentrantLock og betingelsesvariable
+// Delt ressource mellem trådene, bruger ReentrantLock og Condition til trådsikker kommunikation
 public class Buffer {
 
-    private final Queue<String> queue = new LinkedList<>();
+    private final Queue<Bottle> queue = new LinkedList<>();
     private final int maxSize;
-
     private final Lock lock = new ReentrantLock();
-
-    // To separate betingelser så vi kun vækker relevante tråde.
-    private final Condition notEmpty = lock.newCondition();
-    private final Condition notFull = lock.newCondition();
+    private final Condition notFull  = lock.newCondition(); // producer venter her
+    private final Condition notEmpty = lock.newCondition(); // consumer venter her
 
     public Buffer(int maxSize) {
         this.maxSize = maxSize;
     }
 
-    // Tilføj flaske, vent hvis bufferen er fuld.
-    public void put(String bottle) throws InterruptedException {
+    // Tilføj flaske, vent hvis bufferen er fuld
+    public void put(Bottle bottle) throws InterruptedException {
         lock.lock();
         try {
-            while (queue.size() == maxSize) {
-                notFull.await();
-            }
+            while (queue.size() == maxSize) notFull.await();
             queue.add(bottle);
-            notEmpty.signal(); // vækker en ventende consumer.
+            notEmpty.signal();
         } finally {
-            lock.unlock(); // frigiv låsen selv ved fejl.
+            lock.unlock();
         }
     }
 
-    // Hent flaske, vent hvis bufferen er tom.
-    public String get() throws InterruptedException {
+    // Hent flaske, vent hvis bufferen er tom
+    public Bottle get() throws InterruptedException {
         lock.lock();
         try {
-            while (queue.isEmpty()) {
-                notEmpty.await();
-            }
-            String bottle = queue.poll();
-            notFull.signal(); // vækker en ventende producer.
+            while (queue.isEmpty()) notEmpty.await();
+            Bottle bottle = queue.poll();
+            notFull.signal();
             return bottle;
         } finally {
-            lock.unlock(); // frigiv låsen selv ved fejl.
+            lock.unlock();
         }
     }
 }
